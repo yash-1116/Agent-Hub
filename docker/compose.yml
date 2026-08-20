@@ -1,0 +1,69 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+
+  ocr-agent:
+    build: ../ai-services/ocr-agent
+    restart: unless-stopped
+    environment:
+      PORT: 8001
+      TESSERACT_CMD: tesseract
+    expose:
+      - "8001"
+
+  summary-agent:
+    build: ../ai-services/summary-agent
+    restart: unless-stopped
+    environment:
+      PORT: 8002
+    expose:
+      - "8002"
+
+  fraud-agent:
+    build: ../ai-services/fraud-agent
+    restart: unless-stopped
+    environment:
+      PORT: 8003
+    expose:
+      - "8003"
+
+  backend:
+    build: ../backend
+    restart: unless-stopped
+    depends_on:
+      - mongo
+      - ocr-agent
+      - summary-agent
+      - fraud-agent
+    environment:
+      PORT: 5000
+      NODE_ENV: production
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongo:27017/agenthub}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      OCR_AGENT_URL: http://ocr-agent:8001/run
+      SUMMARY_AGENT_URL: http://summary-agent:8002/run
+      FRAUD_AGENT_URL: http://fraud-agent:8003/run
+      AVM_NETWORK: ${AVM_NETWORK:?Set the Algorand x402 network identifier}
+      USDC_ASA_ID: ${USDC_ASA_ID:?Set the Algorand USDC ASA ID}
+      AVM_ADDRESS: ${AVM_ADDRESS:?Set the Algorand payment recipient address}
+      FACILITATOR_URL: ${FACILITATOR_URL:?Set the x402 facilitator URL}
+      JWT_SECRET: ${JWT_SECRET:?Set a strong production JWT secret}
+    ports:
+      - "5000:5000"
+
+  frontend:
+    build:
+      context: ../frontend
+      args:
+        NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:5000}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
+volumes:
+  mongo-data:
