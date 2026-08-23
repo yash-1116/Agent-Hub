@@ -57,10 +57,19 @@ function getAvailableAgents(dbAgents) {
     return true;
   });
 
-  return [...uniqueDbAgents, ...defaults.filter((defaultAgent) => {
+  const availableAgents = [...uniqueDbAgents, ...defaults.filter((defaultAgent) => {
     const agentKey = defaultAgent.name.toLowerCase().split(" ")[0];
     return !seenKeys.has(agentKey);
   })];
+
+  return availableAgents.map((agent) => {
+    const plainAgent = typeof agent.toObject === "function" ? agent.toObject() : agent;
+    const agentKey = defaultKeys.find((key) => String(agent.name || "").toLowerCase().includes(key));
+    return {
+      ...plainAgent,
+      pricePerRequest: agentKey ? 0.01 : Number(agent.pricePerRequest)
+    };
+  });
 }
 
 function getAgentEndpoint(agent) {
