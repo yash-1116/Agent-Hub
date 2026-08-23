@@ -25,6 +25,14 @@ function readFile(file) {
   });
 }
 
+function paymentErrorMessage(error) {
+  const message = error?.message || String(error || "");
+  if (!message || message === "{}" || message === "[object Object]") {
+    return "Payment could not be completed. Confirm Pera Wallet is on Algorand Testnet, has opted into USDC asset 10458941, has at least 0.01 USDC, and has ALGO for transaction fees.";
+  }
+  return message;
+}
+
 function FraudAnalysis({ result }) {
   const analysis = result?.riskLevel
     ? result
@@ -63,7 +71,7 @@ function PiiAnalysis({ result }) {
 }
 
 export default function WorkflowPage() {
-  const { activeAddress, transactionSigner } = useWallet();
+  const { activeAddress, signTransactions } = useWallet();
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState("");
   const [selectedTasks, setSelectedTasks] = useState(allTasks);
@@ -89,7 +97,7 @@ export default function WorkflowPage() {
     if (file.size > 10 * 1024 * 1024) return setError("File exceeds the maximum allowed size of 10 MB.");
     const supported = file.type.startsWith("image/") || /\.(png|jpe?g|webp|bmp|tiff?|pdf|txt|csv|json)$/i.test(file.name);
     if (!supported) return setError("Unsupported file type. Upload PNG, JPG, PDF, TXT, CSV, or JSON.");
-    if (!activeAddress || !transactionSigner) return setError("Connect your wallet before running a paid workflow.");
+    if (!activeAddress || !signTransactions) return setError("Connect your wallet before running a paid workflow.");
     setRunning(true);
     setError("");
     setResult(null);
@@ -98,7 +106,7 @@ export default function WorkflowPage() {
       const imageBase64 = isImage ? await readFile(file) : null;
       const task = selectedTasks.length === allTasks.length && allTasks.every((item) => selectedTasks.includes(item)) ? "all" : selectedTasks[0];
       const body = { file: file.name, task, text: inputText, hasText: Boolean(inputText.trim()), hasImageBase64: Boolean(imageBase64), imageBase64 };
-      const signer = { address: activeAddress, signTransactions: (txns, indexes) => transactionSigner(txns, indexes) };
+      const signer = { address: activeAddress, signTransactions: (txns, indexes) => signTransactions(txns, indexes) };
       const client = new x402Client().register("algorand:*", new ExactAvmScheme(signer));
       const httpClient = new x402HTTPClient(client);
       const first = await fetch(`${BACKEND_URL}/api/orchestrate`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -115,7 +123,7 @@ export default function WorkflowPage() {
       if (!paid.ok || !data.success) throw new Error(data.message || data.error || responseText || `Workflow execution failed (HTTP ${paid.status})`);
       setResult(data);
     } catch (runError) {
-      setError(runError.message || "Workflow failed.");
+      setError(paymentErrorMessage(runError));
     } finally {
       setRunning(false);
     }
