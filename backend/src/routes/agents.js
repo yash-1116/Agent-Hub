@@ -5,7 +5,7 @@ const { randomUUID } = require("crypto");
 const Agent = require("../models/Agent");
 const Invocation = require("../models/Invocation");
 const getAgentEndpoint = require("../utils/agentEndpoint");
-const { getDefaultAgents } = require("../utils/agentEndpoint");
+const { getAvailableAgents } = require("../utils/agentEndpoint");
 
 const router = express.Router();
 
@@ -14,7 +14,7 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   try {
     const dbAgents = await Agent.find({ isActive: true }).sort({ createdAt: -1 });
-    const agents = dbAgents.length ? dbAgents : getDefaultAgents();
+    const agents = getAvailableAgents(dbAgents);
 
     res.json({
       success: true,

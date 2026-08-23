@@ -11,7 +11,9 @@ const agents = [
   { task: "ocr", name: "OCR Agent", description: "Extract text from the uploaded document." },
   { task: "summary", name: "Summary Agent", description: "Create a short, readable document brief." },
   { task: "fraud", name: "Fraud Agent", description: "Check invoice content for risk indicators." },
+  { task: "pii", name: "PII Detection Agent", description: "Detect sensitive information in text and documents." },
 ];
+const allTasks = agents.map((agent) => agent.task);
 const riskTone = { LOW: "text-emerald-300", MEDIUM: "text-amber-300", HIGH: "text-orange-300", CRITICAL: "text-rose-300" };
 
 function readFile(file) {
@@ -52,11 +54,19 @@ function FraudAnalysis({ result }) {
   </div>;
 }
 
+function PiiAnalysis({ result }) {
+  const analysis = result?.findings ? result : result?.result?.findings ? result.result : result?.output?.result || {};
+  return <div className="mt-4 space-y-5">
+    <p className="text-sm text-slate-200">{analysis.message || "PII analysis completed."}</p>
+    {analysis.findings?.length ? <div><p className="text-xs uppercase tracking-[0.18em] text-slate-500">Detected information</p><div className="mt-3 space-y-3">{analysis.findings.map((finding) => <div key={finding.type} className="rounded-lg border border-amber-300/20 bg-amber-300/[0.06] p-3"><p className="text-sm font-medium uppercase text-amber-200">{finding.type.replaceAll("_", " ")} <span className="text-amber-300/70">({finding.count})</span></p><p className="mt-1 break-words font-mono text-xs text-slate-300">{finding.values?.join(", ") || "Value detected"}</p></div>)}</div></div> : <p className="text-sm text-emerald-300">No supported sensitive information detected.</p>}
+  </div>;
+}
+
 export default function WorkflowPage() {
   const { activeAddress, transactionSigner } = useWallet();
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState("");
-  const [selectedTasks, setSelectedTasks] = useState(["ocr", "summary", "fraud"]);
+  const [selectedTasks, setSelectedTasks] = useState(allTasks);
   const [inputText, setInputText] = useState("");
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState(null);
@@ -86,7 +96,7 @@ export default function WorkflowPage() {
     try {
       const isImage = file.type.startsWith("image/") || /\.(png|jpe?g|webp|bmp|tiff?)$/i.test(file.name);
       const imageBase64 = isImage ? await readFile(file) : null;
-      const task = selectedTasks.length === 3 ? "all" : selectedTasks[0];
+      const task = selectedTasks.length === allTasks.length && allTasks.every((item) => selectedTasks.includes(item)) ? "all" : selectedTasks[0];
       const body = { file: file.name, task, text: inputText, hasText: Boolean(inputText.trim()), hasImageBase64: Boolean(imageBase64), imageBase64 };
       const signer = { address: activeAddress, signTransactions: (txns, indexes) => transactionSigner(txns, indexes) };
       const client = new x402Client().register("algorand:*", new ExactAvmScheme(signer));
@@ -117,7 +127,7 @@ export default function WorkflowPage() {
     : output?.result?.riskLevel
       ? output.result
       : output?.output?.result || {};
-  const selectedAgentLabel = selectedTasks.length === 3 ? "OCR + Summary + Fraud" : selectedTasks.map((item) => agents.find((agent) => agent.task === item)?.name).join(" + ");
+  const selectedAgentLabel = selectedTasks.length === allTasks.length && allTasks.every((item) => selectedTasks.includes(item)) ? "All agents" : selectedTasks.map((item) => agents.find((agent) => agent.task === item)?.name).join(" + ");
   return <AppShell eyebrow="NEW WORKFLOW">
     <PageHeading eyebrow="Document processing" title="Run a workflow" description="Upload a document, choose a specialist, and receive a persisted result through x402." />
     <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
@@ -144,7 +154,7 @@ export default function WorkflowPage() {
           <button onClick={runWorkflow} disabled={running} className="mt-5 w-full rounded-xl bg-cyan-300 px-4 py-3.5 text-sm font-semibold text-[#07111f] disabled:cursor-wait disabled:opacity-60">{running ? "Processing workflow..." : "Pay 0.01 USDC and run"}</button>
           {error && <div className="mt-4 rounded-xl border border-rose-400/20 bg-rose-400/10 p-4 text-sm text-rose-200">{error}</div>}
         </div>
-        {result && <div className="rounded-2xl border border-emerald-400/25 bg-emerald-400/[0.06] p-6"><div className="flex items-center justify-between"><div><p className="text-xs uppercase tracking-[0.18em] text-emerald-300">Workflow completed</p><h2 className="mt-2 text-lg font-semibold text-white">{file?.name}</h2></div><StatusPill status="completed" /></div>{result.agents ? <div className="mt-5 space-y-4">{Object.entries(result.agents).map(([name, agentResult]) => <div key={name} className="rounded-xl bg-[#07111f] p-5"><p className="text-xs uppercase tracking-wider text-slate-500">{name} result</p>{name === "fraud" ? <FraudAnalysis result={agentResult} /> : <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-200">{agentResult.summary || agentResult.output?.text || agentResult.text || agentResult.message || "Agent completed successfully."}</p>}</div>)}</div> : <div className="mt-5 rounded-xl bg-[#07111f] p-5">{selectedTasks.length === 1 && selectedTasks[0] === "fraud" ? <FraudAnalysis result={singleFraudResult} /> : <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-200">{output.summary || output.text || output.message || output.result?.message || result.message || "Agent completed successfully."}</p>}</div>}<p className="mt-4 font-mono text-xs text-slate-500">Workflow {result.workflowId}</p></div>}
+        {result && <div className="rounded-2xl border border-emerald-400/25 bg-emerald-400/[0.06] p-6"><div className="flex items-center justify-between"><div><p className="text-xs uppercase tracking-[0.18em] text-emerald-300">Workflow completed</p><h2 className="mt-2 text-lg font-semibold text-white">{file?.name}</h2></div><StatusPill status="completed" /></div>{result.agents ? <div className="mt-5 space-y-4">{Object.entries(result.agents).map(([name, agentResult]) => <div key={name} className="rounded-xl bg-[#07111f] p-5"><p className="text-xs uppercase tracking-wider text-slate-500">{name} result</p>{name === "fraud" ? <FraudAnalysis result={agentResult} /> : name === "pii" ? <PiiAnalysis result={agentResult} /> : <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-200">{agentResult.summary || agentResult.output?.text || agentResult.text || agentResult.message || "Agent completed successfully."}</p>}</div>)}</div> : <div className="mt-5 rounded-xl bg-[#07111f] p-5">{selectedTasks.length === 1 && selectedTasks[0] === "fraud" ? <FraudAnalysis result={singleFraudResult} /> : selectedTasks.length === 1 && selectedTasks[0] === "pii" ? <PiiAnalysis result={output} /> : <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-200">{output.summary || output.text || output.message || output.result?.message || result.message || "Agent completed successfully."}</p>}</div>}<p className="mt-4 font-mono text-xs text-slate-500">Workflow {result.workflowId}</p></div>}
       </section>
     </div>
   </AppShell>;

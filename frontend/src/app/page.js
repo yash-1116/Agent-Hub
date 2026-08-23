@@ -11,6 +11,7 @@ const fallbackAgents = [
   { name: "OCR Agent", description: "Extract text from images and documents.", category: "documents", pricePerRequest: DEFAULT_AGENT_PRICE },
   { name: "Summary Agent", description: "Turn extracted document text into a clear brief.", category: "language", pricePerRequest: DEFAULT_AGENT_PRICE },
   { name: "Fraud Agent", description: "Detect suspicious invoice patterns and payment risk.", category: "security", pricePerRequest: DEFAULT_AGENT_PRICE },
+  { name: "PII Detection Agent", description: "Detect sensitive information in text and documents.", category: "security", pricePerRequest: DEFAULT_AGENT_PRICE },
 ];
 
 export default function Dashboard() {
@@ -43,8 +44,8 @@ export default function Dashboard() {
 
       <section className="mt-10">
         <div className="mb-4 flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">Agent catalog</p><h2 className="mt-2 text-xl font-semibold text-white">Your processing team</h2></div><Link href="/agents" className="text-sm text-slate-400 hover:text-white">View all agents →</Link></div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {visibleAgents.slice(0, 3).map((agent) => { const price = Number(agent.pricePerRequest); const displayPrice = Number.isFinite(price) && price > 0 ? price : DEFAULT_AGENT_PRICE; return <Link href="/workflow" key={agent._id || agent.name} className="group rounded-2xl border border-white/10 bg-[#0b1b2d] p-5 transition hover:-translate-y-1 hover:border-cyan-300/40"><div className="flex items-start justify-between"><span className="rounded-full bg-cyan-300/10 px-2.5 py-1 text-[11px] uppercase tracking-wider text-cyan-200">{agent.category}</span><StatusPill status="Online" /></div><h3 className="mt-8 text-lg font-semibold text-white">{agent.name}</h3><p className="mt-2 min-h-12 text-sm leading-5 text-slate-400">{agent.description}</p><p className="mt-6 text-sm text-slate-300">${displayPrice.toFixed(2)} <span className="text-slate-500">per request</span></p></Link>; })}
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {visibleAgents.slice(0, 4).map((agent) => { const price = Number(agent.pricePerRequest); const displayPrice = Number.isFinite(price) && price > 0 ? price : DEFAULT_AGENT_PRICE; return <Link href="/workflow" key={agent._id || agent.name} className="group rounded-2xl border border-white/10 bg-[#0b1b2d] p-5 transition hover:-translate-y-1 hover:border-cyan-300/40"><div className="flex items-start justify-between"><span className="rounded-full bg-cyan-300/10 px-2.5 py-1 text-[11px] uppercase tracking-wider text-cyan-200">{agent.category}</span><StatusPill status="Online" /></div><h3 className="mt-8 text-lg font-semibold text-white">{agent.name}</h3><p className="mt-2 min-h-12 text-sm leading-5 text-slate-400">{agent.description}</p><p className="mt-6 text-sm text-slate-300">${displayPrice.toFixed(2)} <span className="text-slate-500">per request</span></p></Link>; })}
         </div>
       </section>
 

@@ -6,7 +6,7 @@ const Agent = require("../models/Agent");
 const Invocation = require("../models/Invocation");
 const Workflow = require("../models/Workflow");
 const getAgentEndpoint = require("../utils/agentEndpoint");
-const { getDefaultAgents } = require("../utils/agentEndpoint");
+const { getAvailableAgents } = require("../utils/agentEndpoint");
 
 const router = express.Router();
 
@@ -17,12 +17,13 @@ async function runAllAgents({ workflow, workflowId, agents, file, text, imageBas
   const ocrAgent = findAgent("ocr");
   const summaryAgent = findAgent("summary");
   const fraudAgent = findAgent("fraud");
+  const piiAgent = findAgent("pii");
 
-  if (!ocrAgent || !summaryAgent || !fraudAgent) {
-    throw new Error("OCR, Summary, and Fraud agents are required for a complete workflow.");
+  if (!ocrAgent || !summaryAgent || !fraudAgent || !piiAgent) {
+    throw new Error("OCR, Summary, Fraud, and PII agents are required for a complete workflow.");
   }
 
-  workflow.agentsUsed = [ocrAgent.name, summaryAgent.name, fraudAgent.name];
+  workflow.agentsUsed = [ocrAgent.name, summaryAgent.name, fraudAgent.name, piiAgent.name];
   // The current x402 route charges one bundled workflow fee.
   workflow.totalCost = 0.01;
   await workflow.save();
@@ -57,7 +58,8 @@ async function runAllAgents({ workflow, workflowId, agents, file, text, imageBas
   const agentInputs = [
     { agent: ocrAgent, input: { workflowId, file, task: "ocr", hasText: true, text: extractedText, hasImageBase64: Boolean(imageProvided), imageBase64: imageBase64 || null } },
     { agent: summaryAgent, input: { text: extractedText } },
-    { agent: fraudAgent, input: { workflowId, file, task: "fraud", hasText: true, text: extractedText, hasImageBase64: false, imageBase64: null } }
+    { agent: fraudAgent, input: { workflowId, file, task: "fraud", hasText: true, text: extractedText, hasImageBase64: false, imageBase64: null } },
+    { agent: piiAgent, input: { workflowId, file, task: "pii", hasText: true, text: extractedText, hasImageBase64: false, imageBase64: null } }
   ];
   const results = {};
 
@@ -219,7 +221,7 @@ router.post("/", async (req, res) => {
       totalInvocations: -1
     });
 
-    const agents = dbAgents.length ? dbAgents : getDefaultAgents();
+    const agents = getAvailableAgents(dbAgents);
 
     if (!agents.length) {
       workflow.status = "failed";
@@ -314,7 +316,8 @@ router.post("/", async (req, res) => {
 
     if (
       (normalizedTask === "fraud" ||
-        normalizedTask === "summary") &&
+        normalizedTask === "summary" ||
+        normalizedTask === "pii") &&
       typeof imageBase64 === "string" &&
       imageBase64.trim().length > 0 &&
       !hasMeaningfulText
@@ -448,7 +451,7 @@ router.post("/", async (req, res) => {
       );
 
       const agentResponse = await axios.post(
-        agent.endpoint,
+        getAgentEndpoint(agent),
         agentInput,
         {
           timeout: 60000,

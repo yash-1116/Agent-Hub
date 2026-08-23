@@ -2,14 +2,14 @@ const express = require("express");
 const axios = require("axios");
 const Agent = require("../models/Agent");
 const getAgentEndpoint = require("../utils/agentEndpoint");
-const { getDefaultAgents } = require("../utils/agentEndpoint");
+const { getAvailableAgents } = require("../utils/agentEndpoint");
 
 const router = express.Router();
 
 router.get("/agents", async (req, res) => {
   try {
     const dbAgents = await Agent.find({ isActive: true }).select("name category endpoint");
-    const agents = dbAgents.length ? dbAgents : getDefaultAgents();
+    const agents = getAvailableAgents(dbAgents);
     const checks = await Promise.all(agents.map(async (agent) => {
       const startedAt = Date.now();
       try {
