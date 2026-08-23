@@ -1,12 +1,12 @@
-🚀 Agent-Hub
+🚀**Agent-Hub**
 
 A payment-enabled multi-agent AI platform for document intelligence, fraud detection, privacy analysis, and automated workflows.
 
-📌 Product
-Problem
+📌 **Product**
+**Problem**
 Businesses process large amounts of unstructured information such as invoices, documents, receipts, and reports.
 
-Common problems include:
+**Common problems include:**
 
 Manual document processing
 Time-consuming OCR and data entry
@@ -16,7 +16,7 @@ Long documents that require manual review
 AI services that are difficult to integrate into business workflows
 Traditional payment systems that are not optimized for machine-to-machine AI services
 
-Solution:
+**Solution:**
 Agent-Hub provides a single platform where specialized AI agents can be discovered, executed, and combined into workflows.
 Instead of one large AI system doing everything, AgentHub uses specialized agents:
                     AgentHub
@@ -32,7 +32,7 @@ Instead of one large AI system doing everything, AgentHub uses specialized agent
                   PII Agent
 
 
-🎯 Target Users
+**🎯 Target Users**
 Agent-Hub is designed for:
 
 Businesses
@@ -49,8 +49,8 @@ Developers who want to expose specialized agents as independently usable service
 
 Enterprises
 Organizations that need automated PII detection, document processing, compliance workflows, and scalable AI infrastructure.
-
-💰 Revenue Opportunity
+**
+💰 Revenue Opportunity**
 
 Agent-Hub follows an Agent-as-a-Service / pay-per-use model.
 Instead of requiring users to purchase an entire AI platform subscription, individual agents can be priced based on usage.
@@ -75,7 +75,7 @@ Agent-Hub combines three capabilities in one platform:
 └──────────────────────────────┘
 
 
-Technical Architecture:
+**Technical Architecture:**
                          ┌───────────────────┐
                          │      USER         │
                          └─────────┬─────────┘
@@ -162,8 +162,8 @@ The general x402 flow is:
 The x402 protocol uses the HTTP 402 Payment Required mechanism to allow services to request payment before providing access to a resource.
 In Agent-Hub, the backend also records successful payment/settlement information against the relevant workflow and invocation.
 
-
-Tech Stack
+**
+Tech Stack**
 | Layer            | Technology              |
 | ---------------- | ----------------------- |
 | Frontend         | Next.js / React         |
