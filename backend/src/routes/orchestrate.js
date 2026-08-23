@@ -6,6 +6,7 @@ const Agent = require("../models/Agent");
 const Invocation = require("../models/Invocation");
 const Workflow = require("../models/Workflow");
 const getAgentEndpoint = require("../utils/agentEndpoint");
+const { getDefaultAgents } = require("../utils/agentEndpoint");
 
 const router = express.Router();
 
@@ -211,12 +212,14 @@ router.post("/", async (req, res) => {
     // -----------------------------------------
     // Find active agents
     // -----------------------------------------
-    const agents = await Agent.find({
+    const dbAgents = await Agent.find({
       isActive: true
     }).sort({
       rating: -1,
       totalInvocations: -1
     });
+
+    const agents = dbAgents.length ? dbAgents : getDefaultAgents();
 
     if (!agents.length) {
       workflow.status = "failed";

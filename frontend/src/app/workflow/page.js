@@ -96,10 +96,13 @@ export default function WorkflowPage() {
       const headers = Object.fromEntries(first.headers);
       const required = httpClient.getPaymentRequiredResponse((name) => headers[name.toLowerCase()], null);
       const payload = await httpClient.createPaymentPayload(required);
-      const paymentHeaders = httpClient.encodePaymentSignatureHeader(payload);
+      const encodedPaymentHeaders = httpClient.encodePaymentSignatureHeader(payload);
+      const paymentHeaders = Object.fromEntries(new Headers(encodedPaymentHeaders).entries());
       const paid = await fetch(`${BACKEND_URL}/api/orchestrate`, { method: "POST", headers: { "Content-Type": "application/json", ...paymentHeaders }, body: JSON.stringify(body) });
-      const data = await paid.json();
-      if (!paid.ok || !data.success) throw new Error(data.message || data.error || "Workflow execution failed");
+      const responseText = await paid.text();
+      let data = {};
+      try { data = responseText ? JSON.parse(responseText) : {}; } catch { /* Keep the HTTP error below. */ }
+      if (!paid.ok || !data.success) throw new Error(data.message || data.error || responseText || `Workflow execution failed (HTTP ${paid.status})`);
       setResult(data);
     } catch (runError) {
       setError(runError.message || "Workflow failed.");

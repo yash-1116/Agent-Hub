@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useWallet } from "@txnlab/use-wallet-react";
@@ -17,6 +18,11 @@ const navItems = [
 export function AppShell({ children, eyebrow = "AGENTHUB" }) {
   const pathname = usePathname();
   const { activeAddress } = useWallet();
+  const [mounted, setMounted] = useState(false);
+
+useEffect(() => {
+  setMounted(true);
+}, []);
 
   return (
     <main className="min-h-screen bg-[#07111f] text-slate-100">
@@ -46,7 +52,9 @@ export function AppShell({ children, eyebrow = "AGENTHUB" }) {
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Network</p>
               <p className="mt-2 text-sm text-white">Algorand Testnet</p>
-              <p className="mt-1 truncate font-mono text-xs text-slate-500">{activeAddress || "Wallet not connected"}</p>
+              <p className="mt-1 truncate font-mono text-xs text-slate-500">
+  {mounted && activeAddress ? activeAddress : "Wallet not connected"}
+</p>
             </div>
           </div>
         </aside>
@@ -58,14 +66,20 @@ export function AppShell({ children, eyebrow = "AGENTHUB" }) {
               <p className="mt-1 text-xs text-slate-500">Intelligent document workflows</p>
             </div>
             <div className="flex items-center gap-3">
-              <span className={`hidden rounded-full border px-3 py-1.5 text-xs sm:block ${activeAddress ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300" : "border-white/10 text-slate-500"}`}>
-                {activeAddress ? "Wallet connected" : "Wallet offline"}
-              </span>
+              <span
+  className={`hidden rounded-full border px-3 py-1.5 text-xs sm:block ${
+    mounted && activeAddress
+      ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300"
+      : "border-white/10 text-slate-500"
+  }`}
+>
+  {mounted && activeAddress ? "Wallet connected" : "Wallet offline"}
+</span>
               <Link href="/workflow" className="rounded-xl bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-[#07111f] transition hover:bg-cyan-200">New workflow</Link>
             </div>
           </header>
           <nav className="flex gap-2 overflow-x-auto border-b border-white/10 px-5 py-3 lg:hidden">
-            {navItems.slice(0, 5).map(([label, href]) => <Link key={href} href={href} className={`whitespace-nowrap rounded-lg px-3 py-2 text-xs ${pathname === href || (href !== "/" && pathname.startsWith(href)) ? "bg-cyan-300/10 text-cyan-200" : "text-slate-500"}`}>{label}</Link>)}
+            {navItems.map(([label, href]) => <Link key={href} href={href} className={`whitespace-nowrap rounded-lg px-3 py-2 text-xs ${pathname === href || (href !== "/" && pathname.startsWith(href)) ? "bg-cyan-300/10 text-cyan-200" : "text-slate-500"}`}>{label}</Link>)}
           </nav>
           <div className="px-5 py-8 sm:px-8 lg:px-10">{children}</div>
         </section>
