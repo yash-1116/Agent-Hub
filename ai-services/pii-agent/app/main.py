@@ -8,20 +8,18 @@ app = FastAPI(
 )
 
 PATTERNS = {
-    "name": re.compile(r"(?im)\b(?:name|customer|patient|employee)[ \t]*[:\-][ \t]*([A-Z][a-z]+(?:[ \t]+[A-Z][a-z]+){1,3})"),
-    "address": re.compile(r"(?im)\baddress\s*[:\-]\s*([^\n]+)"),
-    "aadhaar": re.compile(r"(?<!\d)\d{4}[ -]\d{4}[ -]\d{4}(?![ -]\d)"),
-    "pan": re.compile(r"\b[A-Z]{5}\d{4}[A-Z]\b", re.IGNORECASE),
+    "bank_name": re.compile(r"(?im)\bbank\s+name[ \t]*[:=\-][ \t]*([A-Za-z][A-Za-z .&'-]*[A-Za-z])(?=\s*(?:\([^\n)]*\)|\d|,|$))"),
+    "bank_account_number": re.compile(r"(?im)\b(?:bank\s+account|account)\s+(?:number|no\.?|#)[ \t]*[:=\-]?[ \t]*([0-9][0-9 -]{7,16}[0-9])"),
+    "ifsc_code": re.compile(r"\b[A-Z]{4}0[A-Z0-9]{6}\b", re.IGNORECASE),
+    "branch": re.compile(r"(?im)\bbranch[ \t]*(?:name)?[ \t]*[:=\-][ \t]*([^\n,]+)"),
+    "account_name": re.compile(r"(?im)\b(?:account|a\/c)\s+name[ \t]*[:=\-][ \t]*([A-Za-z][A-Za-z .&'-]*?[A-Za-z])(?=\s+(?:sgst|cgst|igst|ifsc|gstin|pan|branch|bank|payment|account)\b|\s*(?:\([^\n)]*\)|@|\d|,|$))"),
     "gstin": re.compile(r"\b\d{2}[A-Z]{5}\d{4}[A-Z]\d[A-Z]\d\b", re.IGNORECASE),
-    "ip_address": re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b"),
-    "date_of_birth": re.compile(r"\b(?:0?[1-9]|[12]\d|3[01])[/.-](?:0?[1-9]|1[0-2])[/.-](?:19|20)\d{2}\b"),
-    "passport": re.compile(r"\b[A-Z]{1,2}\d{7,8}\b", re.IGNORECASE),
-    "vehicle_number": re.compile(r"\b[A-Z]{2}\d{1,2}[A-Z]{1,3}\d{4}\b", re.IGNORECASE),
+    "pan": re.compile(r"\b[A-Z]{5}\d{4}[A-Z]\b", re.IGNORECASE),
     "email": re.compile(r"\b[\w.+-]+@[\w-]+(?:\.[\w-]+)+\b"),
     "phone": re.compile(r"(?:\+\d{1,3}[\s.-])(?:\d[\s.-]?){8,}\d|(?<![\d.])(?:\d{3}[-.\s]){2}\d{4}(?![\d.])"),
-    "ssn": re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
-    "credit_card": re.compile(r"(?<!\d)(?:\d[ -]?){13,19}(?!\d)"),
-    "bank_account": re.compile(r"\b\d{9,18}\b"),
+    "website": re.compile(r"(?<![@\w])(?:https?://)?(?:www\.)?([a-z][a-z0-9-]*(?:\.[a-z0-9-]+)*\.[a-z]{2,63})(?:/[^\s<]*)?\b", re.IGNORECASE),
+    "payment_method": re.compile(r"(?im)\b(?:payment|pay)\s+method[ \t]*[:=\-][ \t]*([^\n,]+)"),
+    "wallet_address": re.compile(r"(?im)\b(?:wallet|wallet\s+address)[ \t]*[:=\-][ \t]*([A-Z0-9]{20,})"),
 }
 
 
